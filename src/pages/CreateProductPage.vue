@@ -1,0 +1,56 @@
+<template>
+  <q-page padding>
+    <q-card>
+      <q-card-section>
+        <h5 class="q-mt-sm">Create product</h5>
+        <q-form @reset="onReset">
+          <div class="q-gutter-y-md">
+            <q-input
+              v-model="productName"
+              label="Product name"
+              type="text"
+            ></q-input>
+            <div class="row q-gutter-x-md justify-between">
+              <q-input
+                v-model.number="quantity"
+                label="Quantity"
+                type="number"
+                class="col-grow"
+              ></q-input>
+              <q-input
+                v-model.number="price"
+                label="Price (per unit)"
+                type="number"
+                class="col-grow"
+              ></q-input>
+            </div>
+            <div>
+              <q-btn label="submit" type="submit" color="primary" />
+              <q-btn
+                label="Reset"
+                type="reset"
+                color="primary"
+                flat
+                class="q-ml-sm"
+              />
+            </div>
+          </div>
+        </q-form>
+      </q-card-section>
+    </q-card>
+  </q-page>
+</template>
+
+<script setup lang="ts">
+import { Ref, ref } from 'vue';
+
+const productName: Ref<string> = ref('');
+const quantity: Ref<number> = ref(0);
+const price: Ref<number> = ref(0.0);
+
+const onReset = () => {
+  productName.value = '';
+  quantity.value = 0;
+  price.value = 0.0;
+};
+</script>

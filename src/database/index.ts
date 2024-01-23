@@ -4,6 +4,7 @@ import { addRxPlugin } from 'rxdb';
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 
 import { productSchema } from './collections/product-schema';
+import { transactionSchema } from './collections/transaction-schema';
 
 export default async function initialiseRxDB() {
   if (process.env.DEV) {
@@ -15,9 +16,12 @@ export default async function initialiseRxDB() {
     storage: getRxStorageDexie(),
   });
 
-  await kioskDb.addCollections({
+  return await kioskDb.addCollections({
     products: {
       schema: productSchema,
+    },
+    transactions: {
+      schema: transactionSchema,
     },
   });
 }

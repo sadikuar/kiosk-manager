@@ -13,6 +13,9 @@ export const productSchema = {
     quantity: {
       type: 'int',
     },
+    price: {
+      type: 'int',
+    },
     timestamp: {
       type: 'string',
       format: 'date-time',

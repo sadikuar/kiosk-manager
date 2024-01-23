@@ -1,7 +1,33 @@
 <template>
-  <q-layout view="lHh lpR lFf">
+  <q-layout view="hHh lpR fFf">
+    <q-header elevated class="bg-white text-black">
+      <q-toolbar>
+        <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
+
+        <q-toolbar-title> Kiosk manager </q-toolbar-title>
+      </q-toolbar>
+    </q-header>
     <q-drawer show-if-above v-model="leftDrawerOpen" side="left" bordered>
-      <!-- TODO -->
+      <q-scroll-area class="fit">
+        <q-list>
+          <template v-for="(menuItem, index) in menuList" :key="index">
+            <q-item
+              clickable
+              :to="menuItem.to"
+              :active="menuItem.label === 'Outbox'"
+              v-ripple
+            >
+              <q-item-section avatar>
+                <q-icon :name="menuItem.icon" />
+              </q-item-section>
+              <q-item-section>
+                {{ menuItem.label }}
+              </q-item-section>
+            </q-item>
+            <q-separator :key="'sep' + index" v-if="menuItem.separator" />
+          </template>
+        </q-list>
+      </q-scroll-area>
     </q-drawer>
 
     <q-page-container>
@@ -11,7 +37,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { Ref, ref } from 'vue';
 
-const leftDrawerOpen = ref(true);
+const leftDrawerOpen: Ref<boolean> = ref(true);
+
+const toggleLeftDrawer = () => {
+  leftDrawerOpen.value = !leftDrawerOpen.value;
+};
+
+const menuList = [
+  {
+    icon: 'inventory_2',
+    label: 'Products',
+    separator: true,
+    to: 'products',
+  },
+  {
+    icon: 'add',
+    label: 'Create product',
+    separator: true,
+    to: 'create-product',
+  },
+  {
+    icon: 'sell',
+    label: 'Transactions',
+    separator: true,
+    to: '/',
+  },
+];
 </script>
