@@ -1,16 +1,14 @@
 <template>
   <q-page padding>
-    <q-table title="Products" :columns="columns" :rows="rows">
-      <template v-slot:top="">
-        <div class="col-2 q-table__title">Products</div>
+    <q-btn
+      class="q-mb-md"
+      color="secondary"
+      label="Add product"
+      icon="add"
+      to="create-product"
+    ></q-btn>
 
-        <q-btn
-          color="secondary"
-          label="Add product"
-          icon="add"
-          to="create-product"
-        ></q-btn>
-      </template>
+    <q-table title="Products" :columns="columns" :rows="rows">
       <template v-slot:body="props">
         <q-tr :props="props">
           <q-td key="name" :props="props">

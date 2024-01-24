@@ -42,7 +42,10 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, ref } from 'vue';
+import { useCollectionsStore } from 'src/stores/collections-store';
+import { Ref, ref, onMounted } from 'vue';
+
+const collections = useCollectionsStore();
 
 const productName: Ref<string> = ref('');
 const quantity: Ref<number> = ref(0);
@@ -52,5 +55,9 @@ const onReset = () => {
   productName.value = '';
   quantity.value = 0;
   price.value = 0.0;
+};
+
+const onSubmit = () => {
+  //TODO:  insert data using RXDB
 };
 </script>
