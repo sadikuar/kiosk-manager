@@ -3,7 +3,7 @@
     <q-card>
       <q-card-section>
         <h5 class="q-mt-sm">Create product</h5>
-        <q-form @reset="onReset">
+        <q-form @reset="onReset" @submit="onSubmit">
           <div class="q-gutter-y-md">
             <q-input
               v-model="productName"
@@ -42,10 +42,11 @@
 </template>
 
 <script setup lang="ts">
+import { Notify } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
-import { Ref, ref, onMounted } from 'vue';
+import { Ref, ref } from 'vue';
 
-const collections = useCollectionsStore();
+const collectionStore = useCollectionsStore();
 
 const productName: Ref<string> = ref('');
 const quantity: Ref<number> = ref(0);
@@ -57,7 +58,21 @@ const onReset = () => {
   price.value = 0.0;
 };
 
-const onSubmit = () => {
-  //TODO:  insert data using RXDB
+const onSubmit = async () => {
+  const newProduct = await collectionStore.collections.products.insert({
+    id: crypto.randomUUID(),
+    name: productName.value,
+    quantity: quantity.value,
+    price: price.value,
+  });
+
+  console.log(newProduct);
+
+  if (newProduct !== null) {
+    Notify.create({
+      message: 'Product added!',
+      color: 'green',
+    });
+  }
 };
 </script>

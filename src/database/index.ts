@@ -14,8 +14,9 @@ export default async function initialiseRxDB() {
 
   addRxPlugin(RxDBMigrationPlugin);
 
+  removeRxDatabase('kiosk-db', getRxStorageDexie());
   const kioskDb = await createRxDatabase({
-    name: 'kiosk-db' + new Date().getTime(),
+    name: 'kiosk-db',
     storage: getRxStorageDexie(),
   });
 

@@ -28,7 +28,10 @@
 
 <script setup lang="ts">
 import { QTableColumn } from 'quasar';
-import { Ref, ref } from 'vue';
+import { useCollectionsStore } from 'src/stores/collections-store';
+import { Ref, ref, onMounted } from 'vue';
+
+const collectionStore = useCollectionsStore();
 
 const columns: QTableColumn[] = [
   {
@@ -57,14 +60,20 @@ const columns: QTableColumn[] = [
 
 const rows: Ref<object[]> = ref([]);
 
-rows.value = [
-  {
-    name: 'Snickers',
-    quantity: 10,
-  },
-  {
-    name: 'Snickers',
-    quantity: 10,
-  },
-];
+const fetchProducts = async () => {
+  const products = await collectionStore.collections.products
+    .find({ selector: {} })
+    .exec();
+
+  products.forEach((product: object) => {
+    rows.value.push({
+      name: product.name,
+      quantity: product.quantity,
+    });
+  });
+};
+
+onMounted(() => {
+  fetchProducts();
+});
 </script>
