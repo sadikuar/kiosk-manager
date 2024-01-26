@@ -17,8 +17,18 @@
           <q-td key="quantity" :props="props">
             {{ props.row.quantity }}
           </q-td>
+          <q-td key="sellingPrice" :props="props">
+            {{ props.row.price }}
+          </q-td>
           <q-td key="action">
-            <q-btn class="q-ma-xs" color="blue" icon="add" label="Sell" dense />
+            <q-btn
+              class="q-ma-xs"
+              color="red"
+              icon="delete"
+              label="Delete"
+              dense
+              @click="deleteProduct(props.row.id)"
+            />
           </q-td>
         </q-tr>
       </template>
@@ -27,11 +37,13 @@
 </template>
 
 <script setup lang="ts">
-import { QTableColumn } from 'quasar';
+import { Notify, QTableColumn } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, ref, onMounted } from 'vue';
 
 const collectionStore = useCollectionsStore();
+
+collectionStore.collections.products.remove$.subscribe(() => fetchProducts());
 
 const columns: QTableColumn[] = [
   {
@@ -51,6 +63,14 @@ const columns: QTableColumn[] = [
     sortable: true,
   },
   {
+    name: 'sellingPrice',
+    required: true,
+    label: 'Selling price',
+    align: 'left',
+    field: 'sellingPrice',
+    sortable: true,
+  },
+  {
     name: 'actions',
     label: 'Actions',
     field: '',
@@ -65,12 +85,17 @@ const fetchProducts = async () => {
     .find({ selector: {} })
     .exec();
 
-  products.forEach((product: object) => {
-    rows.value.push({
-      name: product.name,
-      quantity: product.quantity,
-    });
-  });
+  rows.value = products;
+};
+
+const deleteProduct = async (productId: string) => {
+  const product = await collectionStore.collections.products
+    .findOne({ selector: { id: productId } })
+    .exec();
+  const result = product.remove();
+  if (result !== null) {
+    Notify.create({ message: 'Product deleted!', color: 'green' });
+  }
 };
 
 onMounted(() => {
