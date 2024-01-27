@@ -1,5 +1,5 @@
 export const transactionSchema = {
-  version: 1,
+  version: 2,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -13,6 +13,9 @@ export const transactionSchema = {
       items: {
         type: 'string',
       },
+    },
+    amount: {
+      type: 'int',
     },
     timestamp: {
       type: 'string',

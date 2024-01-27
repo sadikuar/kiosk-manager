@@ -66,8 +66,6 @@ const onSubmit = async () => {
     price: price.value,
   });
 
-  console.log(newProduct);
-
   if (newProduct !== null) {
     Notify.create({
       message: 'Product added!',

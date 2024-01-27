@@ -34,6 +34,10 @@ export default async function initialiseRxDB() {
           oldDoc.time = new Date(oldDoc.time).getTime(); // string to unix
           return oldDoc;
         },
+        2: function (oldDoc) {
+          oldDoc.time = new Date(oldDoc.time).getTime(); // string to unix
+          return oldDoc;
+        },
       },
     },
   });

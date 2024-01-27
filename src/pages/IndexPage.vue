@@ -1,10 +1,10 @@
 <template>
   <q-page padding>
-    <div class="row justify-between items-stretch">
+    <div class="row justify-between items-stretch q-mb-md">
       <div class="col-6 col-grow q-pr-sm">
         <q-table
           title="Stockpile products"
-          :columns="columns"
+          :columns="productColumns"
           :rows="stockpileProducts"
         >
           <template v-slot:body="props">
@@ -33,7 +33,26 @@
         </q-table>
       </div>
       <div class="col-6 col-grow q-pl-sm">
-        <q-table title="Cart" :columns="columns" :rows="cartProducts">
+        <q-table title="Cart" :columns="productColumns" :rows="cartProducts">
+          <!-- <template v-slot:top>
+            <div class="row q-gutter-sm">
+              <div class="q-table__title">Cart</div>
+              <q-btn
+                color="red"
+                icon="delete_forever"
+                label="Clear cart"
+                dense
+                @click="clearCart"
+              />
+              <q-btn
+                color="green"
+                icon="attach_money"
+                label="Cash out"
+                dense
+                @click="cashOut"
+              />
+            </div>
+          </template> -->
           <template v-slot:body="props">
             <q-tr :props="props">
               <q-td key="name" :props="props" class="ellipsis">
@@ -60,11 +79,25 @@
         </q-table>
       </div>
     </div>
+    <q-table
+      title="Transaction history"
+      :columns="transactionColumns"
+      :rows="transactions"
+    >
+      <template v-slot:body="props">
+        <q-tr :props="props">
+          <q-td key="timestamp" :props="props"> {{ props.row.timestamp }}</q-td>
+          <q-td key="numberOfProducts" :props="props">
+            {{ props.row.products.length }}</q-td
+          >
+        </q-tr>
+      </template>
+    </q-table>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { QTableColumn } from 'quasar';
+import { Notify, QTableColumn, useQuasar } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, onMounted, ref } from 'vue';
 
@@ -72,8 +105,11 @@ const collectionsStore = useCollectionsStore();
 
 const stockpileProducts: Ref<object[]> = ref([]);
 const cartProducts: Ref<object[]> = ref([]);
+const transactions: Ref<object[]> = ref([]);
 
-const columns: QTableColumn[] = [
+const $q = useQuasar();
+
+const productColumns: QTableColumn[] = [
   {
     name: 'name',
     required: true,
@@ -106,14 +142,50 @@ const columns: QTableColumn[] = [
   },
 ];
 
+const transactionColumns: QTableColumn[] = [
+  {
+    name: 'timestamp',
+    required: true,
+    label: 'Timestamp',
+    align: 'left',
+    field: 'timestamp',
+    sortable: true,
+  },
+  {
+    name: 'numberOfProducts',
+    required: true,
+    label: 'Number of products',
+    align: 'left',
+    field: 'numberOfProducts',
+    sortable: true,
+  },
+];
+
 const fetchProducts = async () => {
   stockpileProducts.value = await collectionsStore.collections.products
     .find({ selector: {} })
     .exec();
 };
 
+const fetchTransactions = async () => {
+  transactions.value = await collectionsStore.collections.transactions
+    .find({ selector: {} })
+    .exec();
+
+  console.log(transactions.value[0]);
+};
+
 const addProductToCart = (product: object) => {
   cartProducts.value.push(product);
+
+  try {
+    $q.localStorage.set('cart', cartProducts.value);
+  } catch (error) {
+    Notify.create({
+      message: "Couldn't store cart in local Storage: " + error,
+      color: 'red',
+    });
+  }
 };
 
 const removeFromCart = (product: object) => {
@@ -123,9 +195,42 @@ const removeFromCart = (product: object) => {
     ),
     1
   );
+  $q.localStorage.set('cart', cartProducts.value);
+};
+
+const clearCart = () => {
+  $q.localStorage.remove('cart');
+  cartProducts.value = Array<object>();
+};
+
+const cashOut = async () => {
+  const newTransaction = await collectionsStore.collections.transactions.insert(
+    {
+      id: crypto.randomUUID(),
+      products: cartProducts.value.map((element: object) => element.id),
+      amount: cartProducts.value
+        .map((element: object) => element.price)
+        .reduce((accumulator, currentValue) => accumulator + currentValue, 0),
+      timestamp: new Date().toISOString(),
+    }
+  );
+
+  if (newTransaction !== null) {
+    Notify.create({
+      message: 'Transaction added!',
+      color: 'green',
+    });
+
+    clearCart();
+  }
 };
 
 onMounted(() => {
   fetchProducts();
+  fetchTransactions();
+
+  if ($q.localStorage.has('cart')) {
+    cartProducts.value = $q.localStorage.getItem('cart');
+  }
 });
 </script>

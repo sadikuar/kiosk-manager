@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-export const useCollectionsStore = defineStore('db', {
+export const useCollectionsStore = defineStore('collections', {
   state: () => {
     return { collections: {} };
   },
