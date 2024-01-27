@@ -34,25 +34,6 @@
       </div>
       <div class="col-6 col-grow q-pl-sm">
         <q-table title="Cart" :columns="productColumns" :rows="cartProducts">
-          <!-- <template v-slot:top>
-            <div class="row q-gutter-sm">
-              <div class="q-table__title">Cart</div>
-              <q-btn
-                color="red"
-                icon="delete_forever"
-                label="Clear cart"
-                dense
-                @click="clearCart"
-              />
-              <q-btn
-                color="green"
-                icon="attach_money"
-                label="Cash out"
-                dense
-                @click="cashOut"
-              />
-            </div>
-          </template> -->
           <template v-slot:body="props">
             <q-tr :props="props">
               <q-td key="name" :props="props" class="ellipsis">
@@ -77,6 +58,23 @@
             </q-tr>
           </template>
         </q-table>
+        <div class="row q-mt-xs q-gutter-sm">
+          <q-btn
+            color="red"
+            icon="delete_forever"
+            label="Clear cart"
+            dense
+            @click="clearCart"
+          />
+          <q-btn
+            color="green"
+            icon="attach_money"
+            label="Cash out"
+            :disable="cartProducts.length === 0"
+            dense
+            @click="cashOut"
+          />
+        </div>
       </div>
     </div>
     <q-table
@@ -90,6 +88,17 @@
           <q-td key="numberOfProducts" :props="props">
             {{ props.row.products.length }}</q-td
           >
+          <q-td key="amount" :props="props"> {{ props.row.amount }}</q-td>
+          <q-td key="action">
+            <q-btn
+              class="q-ma-xs"
+              color="red"
+              icon="delete"
+              label="Remove"
+              dense
+              @click="removeTransaction(props.row.id)"
+            />
+          </q-td>
         </q-tr>
       </template>
     </q-table>
@@ -101,7 +110,11 @@ import { Notify, QTableColumn, useQuasar } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, onMounted, ref } from 'vue';
 
-const collectionsStore = useCollectionsStore();
+const collectionStore = useCollectionsStore();
+
+collectionStore.collections.transactions.remove$.subscribe(() =>
+  fetchTransactions()
+);
 
 const stockpileProducts: Ref<object[]> = ref([]);
 const cartProducts: Ref<object[]> = ref([]);
@@ -159,20 +172,32 @@ const transactionColumns: QTableColumn[] = [
     field: 'numberOfProducts',
     sortable: true,
   },
+  {
+    name: 'amount',
+    required: true,
+    label: 'Amount',
+    align: 'left',
+    field: 'amount',
+    sortable: true,
+  },
+  {
+    name: 'actions',
+    label: 'Actions',
+    field: '',
+    align: 'left',
+  },
 ];
 
 const fetchProducts = async () => {
-  stockpileProducts.value = await collectionsStore.collections.products
+  stockpileProducts.value = await collectionStore.collections.products
     .find({ selector: {} })
     .exec();
 };
 
 const fetchTransactions = async () => {
-  transactions.value = await collectionsStore.collections.transactions
+  transactions.value = await collectionStore.collections.transactions
     .find({ selector: {} })
     .exec();
-
-  console.log(transactions.value[0]);
 };
 
 const addProductToCart = (product: object) => {
@@ -204,16 +229,14 @@ const clearCart = () => {
 };
 
 const cashOut = async () => {
-  const newTransaction = await collectionsStore.collections.transactions.insert(
-    {
-      id: crypto.randomUUID(),
-      products: cartProducts.value.map((element: object) => element.id),
-      amount: cartProducts.value
-        .map((element: object) => element.price)
-        .reduce((accumulator, currentValue) => accumulator + currentValue, 0),
-      timestamp: new Date().toISOString(),
-    }
-  );
+  const newTransaction = await collectionStore.collections.transactions.insert({
+    id: crypto.randomUUID(),
+    products: cartProducts.value.map((element: object) => element.id),
+    amount: cartProducts.value
+      .map((element: object) => element.price)
+      .reduce((accumulator, currentValue) => accumulator + currentValue, 0),
+    timestamp: new Date().toISOString(),
+  });
 
   if (newTransaction !== null) {
     Notify.create({
@@ -222,6 +245,22 @@ const cashOut = async () => {
     });
 
     clearCart();
+    fetchTransactions();
+  }
+};
+
+const removeTransaction = async (transactionId: string) => {
+  const transaction = await collectionStore.collections.transactions
+    .findOne({
+      selector: { id: transactionId },
+    })
+    .exec();
+  const result = transaction.remove();
+  if (result !== null) {
+    Notify.create({
+      message: 'Transaction deleted!',
+      color: 'green',
+    });
   }
 };
 
