@@ -25,6 +25,7 @@
                   icon="add"
                   label="Add"
                   dense
+                  :disable="props.row.quantity === 0"
                   @click="addProductToCart(props.row)"
                 />
               </q-td>
@@ -33,7 +34,7 @@
         </q-table>
       </div>
       <div class="col-6 col-grow q-pl-sm">
-        <q-table title="Cart" :columns="productColumns" :rows="cartProducts">
+        <q-table title="Cart" :columns="cartColumns" :rows="cartProducts">
           <template v-slot:body="props">
             <q-tr :props="props">
               <q-td key="name" :props="props" class="ellipsis">
@@ -52,7 +53,7 @@
                   icon="remove"
                   label="Remove"
                   dense
-                  @click="removeFromCart(props.row)"
+                  @click="removeProductFromCart(props.row)"
                 />
               </q-td>
             </q-tr>
@@ -155,6 +156,31 @@ const productColumns: QTableColumn[] = [
   },
 ];
 
+const cartColumns: QTableColumn[] = [
+  {
+    name: 'name',
+    required: true,
+    label: 'Name',
+    align: 'left',
+    field: 'name',
+    sortable: true,
+  },
+  {
+    name: 'sellingPrice',
+    required: true,
+    label: 'Selling price',
+    align: 'left',
+    field: 'sellingPrice',
+    sortable: true,
+  },
+  {
+    name: 'actions',
+    label: 'Actions',
+    field: '',
+    align: 'left',
+  },
+];
+
 const transactionColumns: QTableColumn[] = [
   {
     name: 'timestamp',
@@ -200,8 +226,17 @@ const fetchTransactions = async () => {
     .exec();
 };
 
-const addProductToCart = (product: object) => {
-  cartProducts.value.push(product);
+const addProductToCart = async (product: object) => {
+  if (product.quantity != 0) {
+    const result = await product.modify((oldProduct: object) => {
+      oldProduct.quantity = oldProduct.quantity - 1;
+      return oldProduct;
+    });
+
+    cartProducts.value.push(product);
+
+    fetchProducts();
+  }
 
   try {
     $q.localStorage.set('cart', cartProducts.value);
@@ -213,19 +248,45 @@ const addProductToCart = (product: object) => {
   }
 };
 
-const removeFromCart = (product: object) => {
+const removeProductFromCart = async (product: object) => {
+  const document = await collectionStore.collections.products
+    .findOne({ selector: { id: product.id } })
+    .exec();
+
+  await document.modify((oldProduct: object) => {
+    oldProduct.quantity = oldProduct.quantity + 1;
+    return oldProduct;
+  });
+
   cartProducts.value.splice(
     cartProducts.value.findIndex(
       (element: object) => element.id === product.id
     ),
     1
   );
+
   $q.localStorage.set('cart', cartProducts.value);
+
+  fetchProducts();
 };
 
-const clearCart = () => {
+const clearCart = async () => {
   $q.localStorage.remove('cart');
+
+  for (const product: object of cartProducts.value) {
+    const document = await collectionStore.collections.products
+      .findOne({ selector: { id: product.id } })
+      .exec();
+
+    await document.incrementalModify((oldProduct: object) => {
+      oldProduct.quantity = oldProduct.quantity + 1;
+      return oldProduct;
+    });
+  }
+
   cartProducts.value = Array<object>();
+
+  await fetchProducts();
 };
 
 const cashOut = async () => {

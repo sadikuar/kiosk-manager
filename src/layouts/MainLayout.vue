@@ -64,5 +64,11 @@ const menuList = [
     separator: true,
     to: '/',
   },
+  {
+    icon: 'account_balance',
+    label: 'Manage funds',
+    separator: true,
+    to: '/manage-funds',
+  },
 ];
 </script>
