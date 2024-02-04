@@ -1,12 +1,6 @@
 <template>
   <q-page padding>
-    <q-btn
-      class="q-mb-md"
-      color="secondary"
-      label="Add product"
-      icon="add"
-      to="create-product"
-    ></q-btn>
+    <create-product-component class="q-mb-sm" />
 
     <q-table title="Products" :columns="columns" :rows="rows">
       <template v-slot:body="props">
@@ -40,6 +34,7 @@
 import { Notify, QTableColumn } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, ref, onMounted } from 'vue';
+import CreateProductComponent from 'src/components/CreateProductComponent.vue';
 
 const collectionStore = useCollectionsStore();
 

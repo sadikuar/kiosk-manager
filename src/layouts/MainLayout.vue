@@ -53,12 +53,6 @@ const menuList = [
     to: 'products',
   },
   {
-    icon: 'add',
-    label: 'Create product',
-    separator: true,
-    to: 'create-product',
-  },
-  {
     icon: 'sell',
     label: 'Transactions',
     separator: true,
@@ -66,9 +60,9 @@ const menuList = [
   },
   {
     icon: 'account_balance',
-    label: 'Manage funds',
+    label: 'Manage currencies',
     separator: true,
-    to: '/manage-funds',
+    to: '/manage-currencies',
   },
 ];
 </script>

@@ -6,6 +6,7 @@ import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 
 import { productSchema } from './collections/product-schema';
 import { transactionSchema } from './collections/transaction-schema';
+import { currencySchema } from './collections/currency-schema';
 
 export default async function initialiseRxDB() {
   if (process.env.DEV) {
@@ -39,6 +40,10 @@ export default async function initialiseRxDB() {
           return oldDoc;
         },
       },
+    },
+    currencies: {
+      schema: currencySchema,
+      autoMigrate: true,
     },
   });
 }
