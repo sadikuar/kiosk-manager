@@ -87,8 +87,8 @@ const deleteProduct = async (productId: string) => {
   const product = await collectionStore.collections.products
     .findOne({ selector: { id: productId } })
     .exec();
-  const result = product.remove();
-  if (result !== null) {
+  const result = await product.remove();
+  if (result._deleted === true) {
     Notify.create({ message: 'Product deleted!', color: 'green' });
   }
 };

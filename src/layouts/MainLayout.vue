@@ -47,16 +47,16 @@ const toggleLeftDrawer = () => {
 
 const menuList = [
   {
-    icon: 'inventory_2',
-    label: 'Products',
-    separator: true,
-    to: 'products',
-  },
-  {
     icon: 'sell',
     label: 'Transactions',
     separator: true,
     to: '/',
+  },
+  {
+    icon: 'inventory_2',
+    label: 'Manage Products',
+    separator: true,
+    to: 'products',
   },
   {
     icon: 'account_balance',

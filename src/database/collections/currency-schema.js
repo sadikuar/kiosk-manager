@@ -1,5 +1,5 @@
 export const currencySchema = {
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -8,7 +8,7 @@ export const currencySchema = {
       maxLength: 100, // <- the primary key must have set maxLength
     },
     type: {
-      type: 'int',
+      type: 'float',
     },
     amount: {
       type: 'int',

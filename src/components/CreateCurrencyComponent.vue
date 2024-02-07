@@ -10,6 +10,8 @@
               label="Type"
               type="number"
               class="col-grow"
+              step="0.1"
+              decimals
             ></q-input>
             <q-input
               v-model.number="amount"

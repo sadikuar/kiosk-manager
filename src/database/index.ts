@@ -44,6 +44,13 @@ export default async function initialiseRxDB() {
     currencies: {
       schema: currencySchema,
       autoMigrate: true,
+      migrationStrategies: {
+        // 1 means, this transforms data from version 0 to version 1
+        1: function (oldDoc) {
+          oldDoc.time = new Date(oldDoc.time).getTime(); // string to unix
+          return oldDoc;
+        },
+      },
     },
   });
 }
