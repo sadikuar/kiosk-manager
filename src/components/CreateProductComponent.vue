@@ -57,11 +57,12 @@ const onReset = () => {
 };
 
 const onSubmit = async () => {
-  const newProduct = await collectionStore.collections.products.insert({
+  const newProduct = await collectionStore.collections?.products.insert({
     id: crypto.randomUUID(),
     name: productName.value,
     quantity: quantity.value,
     price: price.value,
+    timestamp: new Date().toISOString(),
   });
 
   if (newProduct !== null) {

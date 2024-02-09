@@ -47,7 +47,7 @@ const type: Ref<number> = ref(0);
 const amount: Ref<number> = ref(0);
 
 const onSubmit = async () => {
-  const newCurrency = collectionStore.collections.currencies.insert({
+  const newCurrency = collectionStore.collections?.currencies.insert({
     id: crypto.randomUUID(),
     type: type.value,
     amount: amount.value,

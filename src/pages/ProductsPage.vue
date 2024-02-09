@@ -35,10 +35,11 @@ import { Notify, QTableColumn } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, ref, onMounted } from 'vue';
 import CreateProductComponent from 'src/components/CreateProductComponent.vue';
+import { ProductDocument } from 'src/database';
 
 const collectionStore = useCollectionsStore();
 
-collectionStore.collections.products.remove$.subscribe(() => fetchProducts());
+collectionStore.collections?.products.remove$.subscribe(() => fetchProducts());
 
 const columns: QTableColumn[] = [
   {
@@ -73,10 +74,10 @@ const columns: QTableColumn[] = [
   },
 ];
 
-const rows: Ref<object[]> = ref([]);
+const rows: Ref<ProductDocument[] | undefined> = ref([]);
 
 const fetchProducts = async () => {
-  const products = await collectionStore.collections.products
+  const products = await collectionStore.collections?.products
     .find({ selector: {} })
     .exec();
 
@@ -84,11 +85,11 @@ const fetchProducts = async () => {
 };
 
 const deleteProduct = async (productId: string) => {
-  const product = await collectionStore.collections.products
+  const product = await collectionStore.collections?.products
     .findOne({ selector: { id: productId } })
     .exec();
-  const result = await product.remove();
-  if (result._deleted === true) {
+  const result = await product?.remove();
+  if (result?._deleted === true) {
     Notify.create({ message: 'Product deleted!', color: 'green' });
   }
 };

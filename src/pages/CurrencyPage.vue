@@ -2,13 +2,9 @@
   <q-page padding>
     <create-currency-component class="q-mb-sm" />
 
-    <q-table title="Currencies" :columns="columns" :rows="rows">
-      <template v-slot:top>
-        <div class="q-table__title">Currencies</div>
-        <q-space />
-        <p class="text-subtitle2">Total funds: {{ totalFunds }}</p>
-      </template>
+    <h2>Total funds {{ totalFunds }}</h2>
 
+    <q-table title="Currencies" :columns="columns" :rows="rows">
       <template v-slot:body="props">
         <q-tr :props="props">
           <q-td key="type" :props="props">
@@ -55,6 +51,7 @@ import { Ref, onMounted, ref } from 'vue';
 
 import CreateCurrencyComponent from 'src/components/CreateCurrencyComponent.vue';
 import { useCollectionsStore } from 'src/stores/collections-store';
+import { CurrencyDocument } from 'src/database';
 
 const collectionStore = useCollectionsStore();
 
@@ -87,14 +84,14 @@ const columns: QTableColumn[] = [
   },
 ];
 
-const rows: Ref<object[]> = ref();
+const rows: Ref<CurrencyDocument[] | undefined> = ref([]);
 
 const fetchCurrencies = async () => {
-  rows.value = await collectionStore.collections.currencies
+  rows.value = await collectionStore.collections?.currencies
     .find({ selector: {} })
     .exec();
 
-  rows.value.sort((a: object, b: object) => {
+  rows.value?.sort((a: CurrencyDocument, b: CurrencyDocument) => {
     if (a.type > b.type) {
       return -1;
     }
@@ -102,21 +99,22 @@ const fetchCurrencies = async () => {
   });
 
   let sum = 0;
-  for (const row of rows.value) {
+  for (const row of rows.value as CurrencyDocument[]) {
     sum += row.type * row.amount;
   }
 
   totalFunds.value = sum;
 };
 
-const deleteCurrency = async (currencyId: object) => {
-  const currency = await collectionStore.collections.currencies
-    .findOne({ selector: { id: currencyId } })
-    .exec();
+const deleteCurrency = async (currencyId: string) => {
+  const currency: CurrencyDocument | null | undefined =
+    await collectionStore.collections?.currencies
+      .findOne({ selector: { id: currencyId } })
+      .exec();
 
-  const result = await currency.remove();
+  const result = await currency?.remove();
   console.log(result);
-  if (result._deleted === true) {
+  if (result?._deleted === true) {
     Notify.create({
       message: 'Currency deleted!',
       color: 'green',
@@ -124,29 +122,29 @@ const deleteCurrency = async (currencyId: object) => {
   }
 };
 
-const addCurrencyAmount = async (currencyId) => {
-  const document = await collectionStore.collections.currencies
+const addCurrencyAmount = async (currencyId: string) => {
+  const document = await collectionStore.collections?.currencies
     .findOne({ selector: { id: currencyId } })
     .exec();
 
-  await document.incrementalModify((oldProduct: object) => {
+  await document?.incrementalModify((oldProduct: any) => {
     oldProduct.amount = oldProduct.amount + 1;
     return oldProduct;
   });
 };
 
-const removeCurrencyAmount = async (currencyId) => {
-  const document = await collectionStore.collections.currencies
+const removeCurrencyAmount = async (currencyId: string) => {
+  const document = await collectionStore.collections?.currencies
     .findOne({ selector: { id: currencyId } })
     .exec();
 
-  await document.incrementalModify((oldProduct: object) => {
+  await document?.incrementalModify((oldProduct: any) => {
     oldProduct.amount = oldProduct.amount - 1;
     return oldProduct;
   });
 };
 
-collectionStore.collections.currencies.$.subscribe(() => {
+collectionStore.collections?.currencies.$.subscribe(() => {
   fetchCurrencies();
 });
 

@@ -2,80 +2,28 @@
   <q-page padding>
     <div class="row justify-between items-stretch q-mb-md">
       <div class="col-6 col-grow q-pr-sm">
-        <q-table
-          title="Stockpile products"
-          :columns="productColumns"
-          :rows="stockpileProducts"
-        >
-          <template v-slot:body="props">
-            <q-tr :props="props">
-              <q-td key="name" :props="props" class="ellipsis">
-                {{ props.row.name }}
-              </q-td>
-              <q-td key="quantity" :props="props">
-                {{ props.row.quantity }}
-              </q-td>
-              <q-td key="sellingPrice" :props="props">
-                {{ props.row.price }}
-              </q-td>
-              <q-td key="action">
-                <q-btn
-                  class="q-ma-xs"
-                  color="green"
-                  icon="add"
-                  label="Add"
-                  dense
-                  :disable="props.row.quantity === 0"
-                  @click="addProductToCart(props.row)"
-                />
-              </q-td>
-            </q-tr>
+        <product-table-component :products="stockpileProducts">
+          <template v-slot:table-action="props">
+            <q-btn
+              class="q-ma-xs"
+              color="green"
+              icon="add"
+              label="Add"
+              dense
+              :disable="props.data.row.quantity === 0"
+              @click="addProductToCart(props.data.row)"
+            />
           </template>
-        </q-table>
+        </product-table-component>
       </div>
       <div class="col-6 col-grow q-pl-sm">
-        <q-table title="Cart" :columns="cartColumns" :rows="cartProducts">
-          <template v-slot:body="props">
-            <q-tr :props="props">
-              <q-td key="name" :props="props" class="ellipsis">
-                {{ props.row.name }}
-              </q-td>
-              <q-td key="quantity" :props="props">
-                {{ props.row.quantity }}
-              </q-td>
-              <q-td key="sellingPrice" :props="props">
-                {{ props.row.price }}
-              </q-td>
-              <q-td key="action">
-                <q-btn
-                  class="q-ma-xs"
-                  color="red"
-                  icon="remove"
-                  label="Remove"
-                  dense
-                  @click="removeProductFromCart(props.row)"
-                />
-              </q-td>
-            </q-tr>
-          </template>
-        </q-table>
-        <div class="row q-mt-xs q-gutter-sm">
-          <q-btn
-            color="red"
-            icon="delete_forever"
-            label="Clear cart"
-            dense
-            @click="clearCart"
-          />
-          <q-btn
-            color="green"
-            icon="attach_money"
-            label="Cash out"
-            :disable="cartProducts.length === 0"
-            dense
-            @click="cashOut"
-          />
-        </div>
+        <cart-table-component
+          @update-products="fetchProducts"
+          @cash-out="cashOut"
+          @remove-product-from-cart="removeProductFromCart"
+          @clear-cart="clearCart"
+          :products="cartProducts"
+        />
       </div>
     </div>
     <q-table
@@ -110,76 +58,21 @@
 import { Notify, QTableColumn, useQuasar } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, onMounted, ref } from 'vue';
+import ProductTableComponent from 'src/components/ProductTableComponent.vue';
+import CartTableComponent from 'src/components/CartTableComponent.vue';
+import { ProductDocument } from 'src/database';
 
 const collectionStore = useCollectionsStore();
 
-collectionStore.collections.transactions.remove$.subscribe(() =>
+collectionStore.collections?.transactions.remove$.subscribe(() =>
   fetchTransactions()
 );
 
-const stockpileProducts: Ref<object[]> = ref([]);
-const cartProducts: Ref<object[]> = ref([]);
+const stockpileProducts: Ref<ProductDocument[] | undefined> = ref([]);
+const cartProducts: Ref<ProductDocument[]> = ref([]);
 const transactions: Ref<object[]> = ref([]);
 
 const $q = useQuasar();
-
-const productColumns: QTableColumn[] = [
-  {
-    name: 'name',
-    required: true,
-    label: 'Name',
-    align: 'left',
-    field: 'name',
-    sortable: true,
-  },
-  {
-    name: 'quantity',
-    required: true,
-    label: 'Quantity',
-    align: 'left',
-    field: 'quantity',
-    sortable: true,
-  },
-  {
-    name: 'sellingPrice',
-    required: true,
-    label: 'Selling price',
-    align: 'left',
-    field: 'sellingPrice',
-    sortable: true,
-  },
-  {
-    name: 'actions',
-    label: 'Actions',
-    field: '',
-    align: 'left',
-  },
-];
-
-const cartColumns: QTableColumn[] = [
-  {
-    name: 'name',
-    required: true,
-    label: 'Name',
-    align: 'left',
-    field: 'name',
-    sortable: true,
-  },
-  {
-    name: 'sellingPrice',
-    required: true,
-    label: 'Selling price',
-    align: 'left',
-    field: 'sellingPrice',
-    sortable: true,
-  },
-  {
-    name: 'actions',
-    label: 'Actions',
-    field: '',
-    align: 'left',
-  },
-];
 
 const transactionColumns: QTableColumn[] = [
   {
@@ -215,20 +108,21 @@ const transactionColumns: QTableColumn[] = [
 ];
 
 const fetchProducts = async () => {
-  stockpileProducts.value = await collectionStore.collections.products
+  stockpileProducts.value = await collectionStore.collections?.products
     .find({ selector: {} })
     .exec();
 };
 
 const fetchTransactions = async () => {
-  transactions.value = await collectionStore.collections.transactions
-    .find({ selector: {} })
-    .exec();
+  transactions.value =
+    (await collectionStore.collections?.transactions
+      .find({ selector: {} })
+      .exec()) || [];
 };
 
-const addProductToCart = async (product: object) => {
+const addProductToCart = async (product: ProductDocument) => {
   if (product.quantity != 0) {
-    const result = await product.modify((oldProduct: object) => {
+    await product.modify((oldProduct: any) => {
       oldProduct.quantity = oldProduct.quantity - 1;
       return oldProduct;
     });
@@ -248,75 +142,13 @@ const addProductToCart = async (product: object) => {
   }
 };
 
-const removeProductFromCart = async (product: object) => {
-  const document = await collectionStore.collections.products
-    .findOne({ selector: { id: product.id } })
-    .exec();
-
-  await document.modify((oldProduct: object) => {
-    oldProduct.quantity = oldProduct.quantity + 1;
-    return oldProduct;
-  });
-
-  cartProducts.value.splice(
-    cartProducts.value.findIndex(
-      (element: object) => element.id === product.id
-    ),
-    1
-  );
-
-  $q.localStorage.set('cart', cartProducts.value);
-
-  fetchProducts();
-};
-
-const clearCart = async () => {
-  $q.localStorage.remove('cart');
-
-  for (const product: object of cartProducts.value) {
-    const document = await collectionStore.collections.products
-      .findOne({ selector: { id: product.id } })
-      .exec();
-
-    await document.incrementalModify((oldProduct: object) => {
-      oldProduct.quantity = oldProduct.quantity + 1;
-      return oldProduct;
-    });
-  }
-
-  cartProducts.value = Array<object>();
-
-  await fetchProducts();
-};
-
-const cashOut = async () => {
-  const newTransaction = await collectionStore.collections.transactions.insert({
-    id: crypto.randomUUID(),
-    products: cartProducts.value.map((element: object) => element.id),
-    amount: cartProducts.value
-      .map((element: object) => element.price)
-      .reduce((accumulator, currentValue) => accumulator + currentValue, 0),
-    timestamp: new Date().toISOString(),
-  });
-
-  if (newTransaction !== null) {
-    Notify.create({
-      message: 'Transaction added!',
-      color: 'green',
-    });
-
-    clearCart();
-    fetchTransactions();
-  }
-};
-
 const removeTransaction = async (transactionId: string) => {
-  const transaction = await collectionStore.collections.transactions
+  const transaction = await collectionStore.collections?.transactions
     .findOne({
       selector: { id: transactionId },
     })
     .exec();
-  const result = transaction.remove();
+  const result = transaction?.remove();
   if (result !== null) {
     Notify.create({
       message: 'Transaction deleted!',
@@ -325,12 +157,56 @@ const removeTransaction = async (transactionId: string) => {
   }
 };
 
+const removeProductFromCart = async (product: ProductDocument) => {
+  const document = await collectionStore.collections?.products
+    .findOne({ selector: { id: product.id } })
+    .exec();
+
+  await document?.modify((oldProduct: any) => {
+    oldProduct.quantity = oldProduct.quantity + 1;
+    return oldProduct;
+  });
+
+  cartProducts.value.splice(
+    cartProducts.value.findIndex((element: any) => element.id === product.id),
+    1
+  );
+
+  $q.localStorage.set('cart', cartProducts.value);
+
+  await fetchProducts();
+};
+
+const clearCart = async () => {
+  $q.localStorage.remove('cart');
+
+  for (const product of cartProducts.value as ProductDocument[]) {
+    const document = await collectionStore.collections?.products
+      .findOne({ selector: { id: product.id } })
+      .exec();
+
+    await document?.incrementalModify((oldProduct: any) => {
+      oldProduct.quantity = oldProduct.quantity + 1;
+      return oldProduct;
+    });
+  }
+
+  cartProducts.value = Array<ProductDocument>();
+
+  await fetchProducts();
+};
+
+const cashOut = () => {
+  $q.localStorage.remove('cart');
+  cartProducts.value = Array<ProductDocument>();
+};
+
 onMounted(() => {
   fetchProducts();
   fetchTransactions();
 
   if ($q.localStorage.has('cart')) {
-    cartProducts.value = $q.localStorage.getItem('cart');
+    cartProducts.value = $q.localStorage.getItem('cart') || [];
   }
 });
 </script>
