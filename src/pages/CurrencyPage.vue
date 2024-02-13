@@ -88,16 +88,9 @@ const rows: Ref<CurrencyDocument[] | undefined> = ref([]);
 
 const fetchCurrencies = async () => {
   rows.value = await collectionStore.collections?.currencies
-    .find({ selector: {} })
+    .find()
+    .sort('type')
     .exec();
-
-  rows.value?.sort((a: CurrencyDocument, b: CurrencyDocument) => {
-    if (a.type > b.type) {
-      return -1;
-    }
-    return 1;
-  });
-
   let sum = 0;
   for (const row of rows.value as CurrencyDocument[]) {
     sum += row.type * row.amount;
@@ -108,9 +101,7 @@ const fetchCurrencies = async () => {
 
 const deleteCurrency = async (currencyId: string) => {
   const currency: CurrencyDocument | null | undefined =
-    await collectionStore.collections?.currencies
-      .findOne({ selector: { id: currencyId } })
-      .exec();
+    await collectionStore.collections?.currencies.findOne().exec();
 
   const result = await currency?.remove();
   console.log(result);
@@ -124,7 +115,7 @@ const deleteCurrency = async (currencyId: string) => {
 
 const addCurrencyAmount = async (currencyId: string) => {
   const document = await collectionStore.collections?.currencies
-    .findOne({ selector: { id: currencyId } })
+    .findOne()
     .exec();
 
   await document?.incrementalModify((oldProduct: any) => {
@@ -135,7 +126,7 @@ const addCurrencyAmount = async (currencyId: string) => {
 
 const removeCurrencyAmount = async (currencyId: string) => {
   const document = await collectionStore.collections?.currencies
-    .findOne({ selector: { id: currencyId } })
+    .findOne()
     .exec();
 
   await document?.incrementalModify((oldProduct: any) => {

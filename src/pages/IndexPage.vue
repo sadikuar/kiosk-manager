@@ -2,7 +2,7 @@
   <q-page padding>
     <div class="row justify-between items-stretch q-mb-md">
       <div class="col-6 col-grow q-pr-sm">
-        <product-table-component :products="stockpileProducts">
+        <product-table-component :products="products" class="q-mb-md">
           <template v-slot:table-action="props">
             <q-btn
               class="q-ma-xs"
@@ -58,9 +58,11 @@
 import { Notify, QTableColumn, useQuasar } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, onMounted, ref } from 'vue';
+import { ProductDocument } from 'src/database';
+
 import ProductTableComponent from 'src/components/ProductTableComponent.vue';
 import CartTableComponent from 'src/components/CartTableComponent.vue';
-import { ProductDocument } from 'src/database';
+import CurrencyNumericalPadComponent from 'src/components/CurrencyNumericalPadComponent.vue';
 
 const collectionStore = useCollectionsStore();
 
@@ -68,7 +70,7 @@ collectionStore.collections?.transactions.remove$.subscribe(() =>
   fetchTransactions()
 );
 
-const stockpileProducts: Ref<ProductDocument[] | undefined> = ref([]);
+const products: Ref<ProductDocument[] | undefined> = ref([]);
 const cartProducts: Ref<ProductDocument[]> = ref([]);
 const transactions: Ref<object[]> = ref([]);
 
@@ -108,16 +110,12 @@ const transactionColumns: QTableColumn[] = [
 ];
 
 const fetchProducts = async () => {
-  stockpileProducts.value = await collectionStore.collections?.products
-    .find({ selector: {} })
-    .exec();
+  products.value = await collectionStore.collections?.products.find().exec();
 };
 
 const fetchTransactions = async () => {
   transactions.value =
-    (await collectionStore.collections?.transactions
-      .find({ selector: {} })
-      .exec()) || [];
+    (await collectionStore.collections?.transactions.find().exec()) || [];
 };
 
 const addProductToCart = async (product: ProductDocument) => {

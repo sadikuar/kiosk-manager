@@ -44,6 +44,10 @@ import { Notify } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, ref } from 'vue';
 
+const emits = defineEmits<{
+  (e: 'addedProduct'): void;
+}>();
+
 const collectionStore = useCollectionsStore();
 
 const productName: Ref<string> = ref('');
@@ -70,6 +74,8 @@ const onSubmit = async () => {
       message: 'Product added!',
       color: 'green',
     });
+
+    emits('addedProduct');
   }
 };
 </script>

@@ -4,6 +4,7 @@
       title="Cart"
       :columns="cartColumns"
       :rows="componentProps.products"
+      class="q-mb-md"
     >
       <template v-slot:body="props">
         <q-tr :props="props">
@@ -26,22 +27,25 @@
         </q-tr>
       </template>
     </q-table>
-    <div class="row q-mt-xs q-gutter-sm">
+    <div class="row q-gutter-sm items-center">
       <q-btn
         color="red"
         icon="delete_forever"
         label="Clear cart"
+        class="q-my-none"
         dense
         @click="$emit('clearCart')"
       />
       <q-btn
         color="green"
         icon="attach_money"
-        label="Cash out"
+        label="Start transaction"
+        class="q-my-none q-mr-auto"
         :disable="cartProducts.length === 0"
         dense
         @click="cashOut"
       />
+      <h5 class="q-my-none">Total {{ totalCost }}</h5>
     </div>
   </section>
 </template>
@@ -51,7 +55,7 @@ import { Notify, useQuasar } from 'quasar';
 import { QTableColumn } from 'quasar/dist/types/api/qtable';
 import { ProductDocument } from 'src/database';
 import { useCollectionsStore } from 'src/stores/collections-store';
-import { Ref, onMounted, toRef } from 'vue';
+import { Ref, onMounted, ref, toRef } from 'vue';
 
 const componentProps = defineProps<{
   products: Array<ProductDocument>;
@@ -65,9 +69,8 @@ const emit = defineEmits<{
 }>();
 
 const cartProducts: Ref = toRef(componentProps.products);
-
+const totalCost: Ref<number> = ref(0);
 const collectionStore = useCollectionsStore();
-
 const $q = useQuasar();
 
 const cartColumns: QTableColumn[] = [

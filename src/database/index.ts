@@ -8,6 +8,7 @@ import {
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
+import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 
 import {
   ProductDocType,
@@ -42,6 +43,7 @@ export default async function initialiseRxDB() {
   }
 
   addRxPlugin(RxDBMigrationPlugin);
+  addRxPlugin(RxDBQueryBuilderPlugin);
 
   removeRxDatabase('kiosk-db', getRxStorageDexie());
 

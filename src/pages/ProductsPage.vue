@@ -1,85 +1,38 @@
 <template>
   <q-page padding>
-    <create-product-component class="q-mb-sm" />
+    <create-product-component class="q-mb-sm" @added-product="fetchProducts" />
 
-    <q-table title="Products" :columns="columns" :rows="rows">
-      <template v-slot:body="props">
-        <q-tr :props="props">
-          <q-td key="name" :props="props">
-            {{ props.row.name }}
-          </q-td>
-          <q-td key="quantity" :props="props">
-            {{ props.row.quantity }}
-          </q-td>
-          <q-td key="sellingPrice" :props="props">
-            {{ props.row.price }}
-          </q-td>
-          <q-td key="action">
-            <q-btn
-              class="q-ma-xs"
-              color="red"
-              icon="delete"
-              label="Delete"
-              dense
-              @click="deleteProduct(props.row.id)"
-            />
-          </q-td>
-        </q-tr>
+    <product-table-component :products="rows">
+      <template v-slot:table-action="props">
+        <q-btn
+          class="q-ma-xs"
+          color="red"
+          icon="delete"
+          label="Delete"
+          dense
+          @click="deleteProduct(props.data.row.id)"
+        />
       </template>
-    </q-table>
+    </product-table-component>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { Notify, QTableColumn } from 'quasar';
+import { Notify } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, ref, onMounted } from 'vue';
 import CreateProductComponent from 'src/components/CreateProductComponent.vue';
+import ProductTableComponent from 'src/components/ProductTableComponent.vue';
 import { ProductDocument } from 'src/database';
 
 const collectionStore = useCollectionsStore();
 
 collectionStore.collections?.products.remove$.subscribe(() => fetchProducts());
 
-const columns: QTableColumn[] = [
-  {
-    name: 'name',
-    required: true,
-    label: 'Name',
-    align: 'left',
-    field: 'name',
-    sortable: true,
-  },
-  {
-    name: 'quantity',
-    required: true,
-    label: 'Quantity',
-    align: 'left',
-    field: 'quantity',
-    sortable: true,
-  },
-  {
-    name: 'sellingPrice',
-    required: true,
-    label: 'Selling price',
-    align: 'left',
-    field: 'sellingPrice',
-    sortable: true,
-  },
-  {
-    name: 'actions',
-    label: 'Actions',
-    field: '',
-    align: 'left',
-  },
-];
-
 const rows: Ref<ProductDocument[] | undefined> = ref([]);
 
 const fetchProducts = async () => {
-  const products = await collectionStore.collections?.products
-    .find({ selector: {} })
-    .exec();
+  const products = await collectionStore.collections?.products.find().exec();
 
   rows.value = products;
 };
