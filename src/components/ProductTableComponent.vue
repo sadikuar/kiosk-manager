@@ -1,33 +1,31 @@
 <template>
-  <section>
-    <q-table :columns="productColumns" :rows="products" :filter="filter">
-      <template v-slot:top>
-        <div class="q-table__title">Products</div>
-        <q-space />
-        <q-input dense debounce="300" color="primary" v-model="filter">
-          <template v-slot:append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </template>
-      <template v-slot:body="props">
-        <q-tr :props="props">
-          <q-td key="name" class="ellipsis">
-            {{ props.row.name }}
-          </q-td>
-          <q-td key="quantity">
-            {{ props.row.quantity }}
-          </q-td>
-          <q-td key="sellingPrice">
-            {{ props.row.price }}
-          </q-td>
-          <q-td key="action">
-            <slot name="table-action" :data="props"> </slot>
-          </q-td>
-        </q-tr>
-      </template>
-    </q-table>
-  </section>
+  <q-table :columns="productColumns" :rows="products" :filter="filter">
+    <template v-slot:top>
+      <div class="q-table__title">Products</div>
+      <q-space />
+      <q-input dense debounce="300" color="primary" v-model="filter">
+        <template v-slot:append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </template>
+    <template v-slot:body="props">
+      <q-tr :props="props">
+        <q-td key="name" class="ellipsis">
+          {{ props.row.name }}
+        </q-td>
+        <q-td key="quantity">
+          {{ props.row.quantity }}
+        </q-td>
+        <q-td key="sellingPrice">
+          {{ props.row.price }}
+        </q-td>
+        <q-td key="action">
+          <slot name="table-action" :data="props"> </slot>
+        </q-td>
+      </q-tr>
+    </template>
+  </q-table>
 </template>
 
 <script setup lang="ts">

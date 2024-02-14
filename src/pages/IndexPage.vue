@@ -19,7 +19,7 @@
       <div class="col-6 col-grow q-pl-sm">
         <cart-table-component
           @update-products="fetchProducts"
-          @cash-out="cashOut"
+          @finish-transaction="finishTransaction"
           @remove-product-from-cart="removeProductFromCart"
           @clear-cart="clearCart"
           :products="cartProducts"
@@ -62,7 +62,6 @@ import { ProductDocument } from 'src/database';
 
 import ProductTableComponent from 'src/components/ProductTableComponent.vue';
 import CartTableComponent from 'src/components/CartTableComponent.vue';
-import CurrencyNumericalPadComponent from 'src/components/CurrencyNumericalPadComponent.vue';
 
 const collectionStore = useCollectionsStore();
 
@@ -194,7 +193,7 @@ const clearCart = async () => {
   await fetchProducts();
 };
 
-const cashOut = () => {
+const finishTransaction = () => {
   $q.localStorage.remove('cart');
   cartProducts.value = Array<ProductDocument>();
 };
