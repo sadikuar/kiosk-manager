@@ -5,7 +5,7 @@ import {
 } from 'rxdb';
 
 export const currencySchemaLiteral = {
-  version: 1,
+  version: 2,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -13,7 +13,10 @@ export const currencySchemaLiteral = {
       type: 'string',
       maxLength: 100, // <- the primary key must have set maxLength
     },
-    type: {
+    label: {
+      type: 'string',
+    },
+    value: {
       type: 'number',
     },
     amount: {
@@ -24,7 +27,7 @@ export const currencySchemaLiteral = {
       format: 'date-time',
     },
   },
-  required: ['id', 'type', 'amount', 'timestamp'],
+  required: ['id', 'label', 'value', 'amount', 'timestamp'],
 } as const;
 
 const schemaTyped = toTypedRxJsonSchema(currencySchemaLiteral);

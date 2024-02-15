@@ -46,38 +46,53 @@
     />
 
     <q-dialog v-model="finishingTransaction" persistent>
-      <q-card style="width: 60rem; max-width: 80vw">
+      <q-card>
         <q-card-section>
-          <div class="text-h6">Finishing transaction</div>
+          <div class="text-h5">Finishing transaction</div>
         </q-card-section>
         <q-separator />
         <q-card-section>
+          <div class="text-h6 q-mb-sm">Given currency</div>
+          <currency-numerical-pad-component-vue
+            :reference-value="totalCost"
+            @currency-clicked="updateAmountGiven"
+            @histogram-updated="histogramUpdated"
+            ref="currencyNumericalPadComponent"
+          />
+        </q-card-section>
+        <q-card-section>
+          <div class="text-h6 q-mb-sm">Returned currency</div>
+          <currency-numerical-pad-component-vue
+            :reference-value="returnChange"
+            returning-currency
+            @histogram-updated="histogramUpdated"
+          />
+        </q-card-section>
+        <q-card-section>
+          <h6 class="q-my-none">Total cost: {{ totalCost }}</h6>
+          <q-separator />
           <div class="row">
             <div class="col">
-              <currency-numerical-pad-component-vue
-                :total-cost="totalCost"
-                @currency-clicked="updateAmountGiven"
-              />
+              <div class="text-h6">
+                Amount given: {{ amountGiven.toFixed(1) }}
+              </div>
             </div>
             <div class="col">
-              <h5 class="q-my-none">Total cost: {{ totalCost }}</h5>
-              <div class="row">
-                <div class="col">
-                  <p class="text-h6">
-                    Amount given: {{ amountGiven.toFixed(1) }}
-                  </p>
-                </div>
-                <div class="col">
-                  <q-btn label="Clear" color="red" @click="amountGiven = 0" />
-                </div>
+              <div class="text-h6">
+                Return change: {{ returnChange.toFixed(1) }}
               </div>
-              <p class="text-h6">Return change: {{ returnChange }}</p>
             </div>
           </div>
         </q-card-section>
         <q-separator />
         <q-card-actions align="right">
-          <q-btn label="Finish transaction" color="green" />
+          <q-btn
+            label="Finish transaction"
+            color="green"
+            :disable="amountGiven < totalCost"
+            @click="finishTransaction"
+          />
+          <q-btn label="Clear" color="red" @click="amountGiven = 0" />
           <q-btn label="Cancel" v-close-popup />
         </q-card-actions>
       </q-card>
@@ -107,6 +122,17 @@ const emit = defineEmits<{
 const cartProducts: Ref = toRef(componentProps.products);
 const finishingTransaction: Ref<boolean> = ref(false);
 const amountGiven: Ref<number> = ref(0);
+const currencyNumericalPadComponent: Ref<InstanceType<
+  typeof CurrencyNumericalPadComponentVue
+> | null> = ref<InstanceType<typeof CurrencyNumericalPadComponentVue> | null>(
+  null
+);
+
+type CurrencyAmountObject = {
+  [currencyId: string]: number;
+};
+
+const currencyHistogram: Ref<CurrencyAmountObject> = ref({});
 
 const totalCost = computed(() => {
   let initialValue = 0;
@@ -120,7 +146,7 @@ const totalCost = computed(() => {
 
 const returnChange = computed(() => {
   if (amountGiven.value > 0 && amountGiven.value > totalCost.value) {
-    return (amountGiven.value - totalCost.value).toFixed(1);
+    return amountGiven.value - totalCost.value;
   }
   return 0;
 });
@@ -153,6 +179,9 @@ const cartColumns: QTableColumn[] = [
   },
 ];
 
+/**
+ * Inserts a new transaction in the database and calls the `addCurrencies` method of the currency numerical pad component.
+ */
 const finishTransaction = async () => {
   finishingTransaction.value = true;
   const newTransaction = await collectionStore.collections?.transactions.insert(
@@ -174,12 +203,38 @@ const finishTransaction = async () => {
       message: 'Transaction added!',
       color: 'green',
     });
+    await updateCurrencies();
     emit('finishTransaction');
   }
 };
 
 const updateAmountGiven = (type: number) => {
   amountGiven.value += type;
+};
+
+const histogramUpdated = (currencyId: string, amount: number) => {
+  if (currencyId in currencyHistogram.value) {
+    currencyHistogram.value[currencyId] += amount;
+  } else {
+    currencyHistogram.value[currencyId] = amount;
+  }
+};
+
+const updateCurrencies = async () => {
+  for (const [key, value] of Object.entries(currencyHistogram.value)) {
+    const currency = await collectionStore.collections?.currencies
+      .findOne({
+        selector: { id: key },
+      })
+      .exec();
+
+    if (currency !== null) {
+      await currency?.incrementalModify((oldCurrency) => {
+        oldCurrency.amount += value;
+        return oldCurrency;
+      });
+    }
+  }
 };
 
 onMounted(() => {

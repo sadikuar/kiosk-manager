@@ -5,9 +5,10 @@
       <q-form @reset="onReset" @submit="onSubmit">
         <div class="q-gutter-y-md">
           <div class="row q-gutter-x-md justify-between">
+            <q-input v-model="label" label="Label" class="col-grow"></q-input>
             <q-input
-              v-model.number="type"
-              label="Type"
+              v-model.number="value"
+              label="Value"
               type="number"
               class="col-grow"
               step="0.1"
@@ -43,13 +44,15 @@ import { Ref, ref } from 'vue';
 
 const collectionStore = useCollectionsStore();
 
-const type: Ref<number> = ref(0);
+const label: Ref<string> = ref('');
+const value: Ref<number> = ref(0);
 const amount: Ref<number> = ref(0);
 
 const onSubmit = async () => {
   const newCurrency = collectionStore.collections?.currencies.insert({
     id: crypto.randomUUID(),
-    type: type.value,
+    label: label.value,
+    value: value.value,
     amount: amount.value,
     timestamp: new Date().toISOString(),
   });
@@ -63,7 +66,7 @@ const onSubmit = async () => {
 };
 
 const onReset = () => {
-  type.value = 0;
+  value.value = 0;
   amount.value = 0;
 };
 </script>

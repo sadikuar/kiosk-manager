@@ -3,13 +3,16 @@
     <q-btn
       v-for="currency in currencies"
       :key="currency.id"
-      :label="currency.type"
-      size="xl"
+      :label="currency.label"
       :push="true"
-      style="width: 5rem"
+      style="width: 6rem"
       color="blue-10"
-      :disable="isTotalCostZeroOrUndefined"
-      @click="updateGainedCurrency(currency.type)"
+      :disable="
+        isReferenceValueZeroOrUndefined ||
+        isReturningCurrencyAndHasNoAmount(currency.amount) ||
+        isReturningCurrencyAndReferenceValueIsLqThanValue(currency.value)
+      "
+      @click="onClick(currency.id, currency.value)"
     />
   </div>
 </template>
@@ -19,44 +22,47 @@ import { CurrencyDocument } from 'src/database';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, computed, onMounted, ref } from 'vue';
 
-type CurrencyAmountObject = {
-  [currency: string]: { amount: number };
-};
-
 const props = defineProps<{
-  totalCost?: number;
+  returningCurrency?: boolean;
+  referenceValue?: number;
 }>();
 
 const emits = defineEmits<{
   (e: 'currencyClicked', type: number): void;
+  (e: 'histogramUpdated', currencyId: string, amount: number): void;
 }>();
 
 const collectionStore = useCollectionsStore();
 
 const currencies: Ref<CurrencyDocument[] | undefined> = ref([]);
-const gainedCurrencies: Ref<CurrencyAmountObject> = ref({});
 
-const isTotalCostZeroOrUndefined = computed(() => {
-  if (props.totalCost !== undefined) {
-    return props.totalCost < 0;
+const isReferenceValueZeroOrUndefined = computed(() => {
+  if (props.referenceValue !== undefined) {
+    return props.referenceValue <= 0;
   }
-  return false;
+  return true;
 });
+
+const isReturningCurrencyAndHasNoAmount = (amount: number) =>
+  props.returningCurrency && amount === 0;
+
+const isReturningCurrencyAndReferenceValueIsLqThanValue = (value: number) => {
+  if (props.referenceValue !== undefined) {
+    return props.returningCurrency && props.referenceValue > value;
+  }
+};
 
 const fetchCurrenies = async () => {
   currencies.value = await collectionStore.collections?.currencies
     .find()
-    .sort('type')
+    .sort('value')
     .exec();
 };
 
-const updateGainedCurrency = (currency: number) => {
-  if (currency in gainedCurrencies.value) {
-    gainedCurrencies.value[currency].amount += 1;
-  } else {
-    gainedCurrencies.value[currency] = { amount: 1 };
-  }
-  emits('currencyClicked', currency);
+const onClick = (currencyId: string, currencyType: number) => {
+  const value = props.returningCurrency ? -1 : 1;
+  emits('histogramUpdated', currencyId, value);
+  emits('currencyClicked', currencyType);
 };
 
 onMounted(() => {

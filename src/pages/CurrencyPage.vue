@@ -7,8 +7,11 @@
     <q-table title="Currencies" :columns="columns" :rows="rows">
       <template v-slot:body="props">
         <q-tr :props="props">
-          <q-td key="type" :props="props">
-            {{ props.row.type }}
+          <q-td key="label" :props="props">
+            {{ props.row.label }}
+          </q-td>
+          <q-td key="value" :props="props">
+            {{ props.row.value }}
           </q-td>
           <q-td key="amount" :props="props">
             {{ props.row.amount }}
@@ -59,11 +62,19 @@ const totalFunds: Ref<number> = ref(0);
 
 const columns: QTableColumn[] = [
   {
-    name: 'type',
+    name: 'label',
     required: true,
-    label: 'Type',
+    label: 'Label',
     align: 'left',
-    field: 'type',
+    field: 'label',
+    sortable: true,
+  },
+  {
+    name: 'value',
+    required: true,
+    label: 'Value',
+    align: 'left',
+    field: 'value',
     sortable: true,
   },
   {
@@ -89,19 +100,20 @@ const rows: Ref<CurrencyDocument[] | undefined> = ref([]);
 const fetchCurrencies = async () => {
   rows.value = await collectionStore.collections?.currencies
     .find()
-    .sort('type')
+    .sort('value')
     .exec();
   let sum = 0;
   for (const row of rows.value as CurrencyDocument[]) {
-    sum += row.type * row.amount;
+    sum += row.value * row.amount;
   }
 
   totalFunds.value = sum;
 };
 
 const deleteCurrency = async (currencyId: string) => {
-  const currency: CurrencyDocument | null | undefined =
-    await collectionStore.collections?.currencies.findOne().exec();
+  const currency = await collectionStore.collections?.currencies
+    .findOne({ selector: { id: currencyId } })
+    .exec();
 
   const result = await currency?.remove();
   console.log(result);
@@ -115,10 +127,10 @@ const deleteCurrency = async (currencyId: string) => {
 
 const addCurrencyAmount = async (currencyId: string) => {
   const document = await collectionStore.collections?.currencies
-    .findOne()
+    .findOne({ selector: { id: currencyId } })
     .exec();
 
-  await document?.incrementalModify((oldProduct: any) => {
+  await document?.incrementalModify((oldProduct) => {
     oldProduct.amount = oldProduct.amount + 1;
     return oldProduct;
   });
@@ -126,10 +138,10 @@ const addCurrencyAmount = async (currencyId: string) => {
 
 const removeCurrencyAmount = async (currencyId: string) => {
   const document = await collectionStore.collections?.currencies
-    .findOne()
+    .findOne({ selector: { id: currencyId } })
     .exec();
 
-  await document?.incrementalModify((oldProduct: any) => {
+  await document?.incrementalModify((oldProduct) => {
     oldProduct.amount = oldProduct.amount - 1;
     return oldProduct;
   });
