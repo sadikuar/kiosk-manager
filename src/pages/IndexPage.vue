@@ -50,6 +50,14 @@
           </q-td>
         </q-tr>
       </template>
+
+      <template v-slot:bottom-row>
+        <q-tr>
+          <q-td colspan="100%" class="text-weight-bolder">
+            Total transactions amount {{ totalTransactionsAmount }}
+          </q-td>
+        </q-tr>
+      </template>
     </q-table>
   </q-page>
 </template>
@@ -57,8 +65,8 @@
 <script setup lang="ts">
 import { Notify, QTableColumn, useQuasar } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
-import { Ref, onMounted, ref } from 'vue';
-import { ProductDocument } from 'src/database';
+import { Ref, computed, onMounted, ref } from 'vue';
+import { ProductDocument, TransactionDocument } from 'src/database';
 
 import ProductTableComponent from 'src/components/ProductTableComponent.vue';
 import CartTableComponent from 'src/components/CartTableComponent.vue';
@@ -71,7 +79,7 @@ collectionStore.collections?.transactions.remove$.subscribe(() =>
 
 const products: Ref<ProductDocument[] | undefined> = ref([]);
 const cartProducts: Ref<ProductDocument[]> = ref([]);
-const transactions: Ref<object[]> = ref([]);
+const transactions: Ref<TransactionDocument[]> = ref([]);
 
 const $q = useQuasar();
 
@@ -107,6 +115,16 @@ const transactionColumns: QTableColumn[] = [
     align: 'left',
   },
 ];
+
+const totalTransactionsAmount = computed(() => {
+  let initialValue = 0;
+  return transactions.value
+    .map((transaction) => transaction.amount)
+    .reduce(
+      (accumulator: number, currentValue: number) => accumulator + currentValue,
+      initialValue
+    );
+});
 
 const fetchProducts = async () => {
   products.value = await collectionStore.collections?.products.find().exec();

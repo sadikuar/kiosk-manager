@@ -52,21 +52,27 @@
         </q-card-section>
         <q-separator />
         <q-card-section>
-          <div class="text-h6 q-mb-sm">Given currency</div>
-          <currency-numerical-pad-component-vue
-            :reference-value="totalCost"
-            @currency-clicked="updateAmountGiven"
-            @histogram-updated="histogramUpdated"
-            ref="currencyNumericalPadComponent"
-          />
-        </q-card-section>
-        <q-card-section>
-          <div class="text-h6 q-mb-sm">Returned currency</div>
-          <currency-numerical-pad-component-vue
-            :reference-value="returnChange"
-            returning-currency
-            @histogram-updated="histogramUpdated"
-          />
+          <div class="row">
+            <div class="col">
+              <div class="text-h6 q-mb-sm">Given currency</div>
+              <currency-numerical-pad-component-vue
+                :reference-value="totalCost"
+                buttons-color="blue-10"
+                @currency-clicked="updateAmountGiven"
+                @histogram-updated="histogramUpdated"
+                ref="currencyNumericalPadComponent"
+              />
+            </div>
+            <div class="col">
+              <div class="text-h6 q-mb-sm">Returned currency</div>
+              <currency-numerical-pad-component-vue
+                :reference-value="returnChange"
+                buttons-color="cyan-10"
+                returning-currency
+                @histogram-updated="histogramUpdated"
+              />
+            </div>
+          </div>
         </q-card-section>
         <q-card-section>
           <h6 class="q-my-none">Total cost: {{ totalCost }}</h6>
@@ -84,6 +90,21 @@
             </div>
           </div>
         </q-card-section>
+        <q-card-section>
+          <div class="text-h6">Currencies</div>
+          <div
+            class="row"
+            :key="entry[0]"
+            v-for="entry in Object.entries(currencyHistogram)"
+          >
+            <div class="col">
+              {{ entry[1].label }}
+            </div>
+            <div class="col">
+              {{ entry[1].amount }}
+            </div>
+          </div>
+        </q-card-section>
         <q-separator />
         <q-card-actions align="right">
           <q-btn
@@ -92,7 +113,7 @@
             :disable="amountGiven < totalCost"
             @click="finishTransaction"
           />
-          <q-btn label="Clear" color="red" @click="amountGiven = 0" />
+          <q-btn label="Clear" color="red" @click="onClear" />
           <q-btn label="Cancel" v-close-popup />
         </q-card-actions>
       </q-card>
@@ -129,7 +150,7 @@ const currencyNumericalPadComponent: Ref<InstanceType<
 );
 
 type CurrencyAmountObject = {
-  [currencyId: string]: number;
+  [currencyId: string]: { amount: number; label: string };
 };
 
 const currencyHistogram: Ref<CurrencyAmountObject> = ref({});
@@ -212,11 +233,18 @@ const updateAmountGiven = (type: number) => {
   amountGiven.value += type;
 };
 
-const histogramUpdated = (currencyId: string, amount: number) => {
+const histogramUpdated = (
+  currencyId: string,
+  currencyLabel: string,
+  value: number
+) => {
   if (currencyId in currencyHistogram.value) {
-    currencyHistogram.value[currencyId] += amount;
+    currencyHistogram.value[currencyId].amount += value;
   } else {
-    currencyHistogram.value[currencyId] = amount;
+    currencyHistogram.value[currencyId] = {
+      amount: value,
+      label: currencyLabel,
+    };
   }
 };
 
@@ -230,11 +258,16 @@ const updateCurrencies = async () => {
 
     if (currency !== null) {
       await currency?.incrementalModify((oldCurrency) => {
-        oldCurrency.amount += value;
+        oldCurrency.amount += value.amount;
         return oldCurrency;
       });
     }
   }
+};
+
+const onClear = () => {
+  amountGiven.value = 0;
+  currencyHistogram.value = {};
 };
 
 onMounted(() => {
