@@ -26,12 +26,20 @@
               @click="addCurrencyAmount(props.row.id)"
             />
             <q-btn
+              class="q-ma-xs"
               color="blue"
               icon="remove"
               label="Remove"
               dense
               @click="removeCurrencyAmount(props.row.id)"
               :disable="props.row.amount < 1"
+            />
+            <q-btn
+              class="q-ma-xs text-black"
+              color="yellow"
+              icon="edit"
+              label="Edit"
+              dense
             />
             <q-btn
               class="q-ma-xs"
@@ -45,6 +53,17 @@
         </q-tr>
       </template>
     </q-table>
+    <q-dialog persistent>
+      <q-card>
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Edit currency</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section> </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 

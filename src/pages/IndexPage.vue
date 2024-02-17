@@ -127,7 +127,10 @@ const totalTransactionsAmount = computed(() => {
 });
 
 const fetchProducts = async () => {
-  products.value = await collectionStore.collections?.products.find().exec();
+  products.value = await collectionStore.collections?.products
+    .find()
+    .sort('name')
+    .exec();
 };
 
 const fetchTransactions = async () => {

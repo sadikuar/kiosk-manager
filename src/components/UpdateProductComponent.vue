@@ -32,41 +32,52 @@
 
 <script setup lang="ts">
 import { Notify } from 'quasar';
-import { useCollectionsStore } from 'src/stores/collections-store';
-import { Ref, ref } from 'vue';
+import { ProductDocument } from 'src/database';
+import { Ref, ref, watch } from 'vue';
 
-const emits = defineEmits<{
-  (e: 'addedProduct'): void;
+const props = defineProps<{
+  product?: ProductDocument;
 }>();
 
-const collectionStore = useCollectionsStore();
+const emits = defineEmits<{
+  (e: 'updatedProduct'): void;
+}>();
 
 const productName: Ref<string> = ref('');
 const quantity: Ref<number> = ref(0);
 const price: Ref<number> = ref(0.0);
 
 const onReset = () => {
-  productName.value = '';
-  quantity.value = 0;
-  price.value = 0.0;
+  productName.value = props.product?.name || '';
+  quantity.value = props.product?.quantity || 0;
+  price.value = props.product?.price || 0;
 };
 
 const onSubmit = async () => {
-  const newProduct = await collectionStore.collections?.products.insert({
-    id: crypto.randomUUID(),
+  const currentTimestamp = new Date().toISOString();
+  props.product?.incrementalPatch({
     name: productName.value,
     quantity: quantity.value,
     price: price.value,
-    timestamp: new Date().toISOString(),
+    timestamp: currentTimestamp,
   });
 
-  if (newProduct !== null) {
+  if (props.product?.timestamp === currentTimestamp) {
     Notify.create({
-      message: 'Product added!',
+      message: 'Product updated!',
       color: 'green',
     });
 
-    emits('addedProduct');
+    emits('updatedProduct');
   }
 };
+
+watch(
+  () => props.product,
+  (newProduct: ProductDocument | undefined) => {
+    productName.value = newProduct?.name || '';
+    quantity.value = newProduct?.quantity || 0;
+    price.value = newProduct?.price || 0;
+  }
+);
 </script>
