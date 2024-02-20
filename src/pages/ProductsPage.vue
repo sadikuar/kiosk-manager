@@ -31,8 +31,8 @@
       </template>
     </product-table-component>
 
-    <q-dialog persistent>
-      <q-card v-model="updateDialog">
+    <q-dialog persistent v-model="updateDialog">
+      <q-card>
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Edit product</div>
           <q-space />
@@ -40,7 +40,10 @@
         </q-card-section>
 
         <q-card-section>
-          <update-product-component :product="product" />
+          <update-product-component
+            :product="product"
+            @updated-product="fetchProducts"
+          />
         </q-card-section>
       </q-card>
     </q-dialog>

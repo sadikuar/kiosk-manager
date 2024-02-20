@@ -16,8 +16,8 @@
           class="col-grow"
         ></q-input>
       </div>
-      <div>
-        <q-btn label="submit" type="submit" color="primary" />
+      <div class="row q-gutter-x-md justify-end">
+        <q-btn label="submit" type="submit" color="primary" v-close-popup />
         <q-btn
           label="Reset"
           type="reset"
@@ -55,14 +55,14 @@ const onReset = () => {
 
 const onSubmit = async () => {
   const currentTimestamp = new Date().toISOString();
-  props.product?.incrementalPatch({
+  const result = await props.product?.incrementalPatch({
     name: productName.value,
     quantity: quantity.value,
     price: price.value,
     timestamp: currentTimestamp,
   });
 
-  if (props.product?.timestamp === currentTimestamp) {
+  if (result?.timestamp === currentTimestamp) {
     Notify.create({
       message: 'Product updated!',
       color: 'green',

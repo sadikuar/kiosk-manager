@@ -33,7 +33,9 @@
     >
       <template v-slot:body="props">
         <q-tr :props="props">
-          <q-td key="timestamp" :props="props"> {{ props.row.timestamp }}</q-td>
+          <q-td key="timestamp" :props="props">
+            {{ new Date(props.row.timestamp).toLocaleString() }}</q-td
+          >
           <q-td key="numberOfProducts" :props="props">
             {{ props.row.products.length }}</q-td
           >
@@ -63,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { Notify, QTableColumn, useQuasar } from 'quasar';
+import { Notify, QTableColumn, date, useQuasar } from 'quasar';
 import { useCollectionsStore } from 'src/stores/collections-store';
 import { Ref, computed, onMounted, ref } from 'vue';
 import { ProductDocument, TransactionDocument } from 'src/database';
