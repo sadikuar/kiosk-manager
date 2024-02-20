@@ -1,6 +1,6 @@
 {
   "name": "kiosk-manager",
-  "version": "0.0.1",
+  "version": "1.0.2",
   "description": "A web application to manage a kiosk.",
   "productName": "Kiosk manager app",
   "author": "Artan Sadiku <artan.sadiku@he-arc.ch>",
